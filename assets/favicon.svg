@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- TEMPORARY MARK — replace with the official SYNELIGHT Infinite Sync symbol -->
+  <rect width="48" height="48" rx="10" fill="#060B18"/>
+  <circle cx="18.5" cy="24" r="11" fill="none" stroke="#FFFFFF" stroke-width="2.4"/>
+  <circle cx="29.5" cy="24" r="11" fill="none" stroke="#20C7D9" stroke-width="2.4"/>
+  <circle cx="24" cy="24" r="3" fill="#20C7D9"/>
+</svg>

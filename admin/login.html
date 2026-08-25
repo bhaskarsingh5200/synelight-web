@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Login — SYNELIGHT</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#060B18">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-32x32.png">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body class="admin-body admin-body--center">
+  <main class="login-card">
+    <div class="login-brand">
+      <img src="/assets/logo.png" alt="" width="72" height="48">
+      <span>SYNELIGHT</span>
+    </div>
+    <p class="login-sub">Lead Management — Internal Access Only</p>
+    <form id="login-form" novalidate>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required autofocus>
+      <p class="login-error" id="login-error" role="alert" hidden>Incorrect password.</p>
+      <button class="btn-admin btn-admin--primary" type="submit">Sign In →</button>
+    </form>
+    <a class="login-back" href="/">← Back to website</a>
+  </main>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

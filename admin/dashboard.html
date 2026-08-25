@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leads — SYNELIGHT Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#060B18">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-32x32.png">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-topbar">
+    <div class="admin-topbar-left">
+      <img src="/assets/logo.png" alt="" width="44" height="29">
+      <span class="admin-topbar-title">SYNELIGHT <em>Leads</em></span>
+    </div>
+    <div class="admin-topbar-right">
+      <span id="engine-badge" class="engine-badge"></span>
+      <a href="/" target="_blank" rel="noopener">View site ↗</a>
+      <button id="logout-btn" class="btn-admin btn-admin--ghost btn-admin--sm" type="button">Log out</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- Summary -->
+    <section class="stat-row" aria-label="Pipeline summary">
+      <button class="stat-card is-active" data-status-filter="" type="button"><strong data-stat="ALL">0</strong><span>All</span></button>
+      <button class="stat-card" data-status-filter="NEW" type="button"><strong data-stat="NEW">0</strong><span>New</span></button>
+      <button class="stat-card" data-status-filter="CONTACTED" type="button"><strong data-stat="CONTACTED">0</strong><span>Contacted</span></button>
+      <button class="stat-card" data-status-filter="QUALIFIED" type="button"><strong data-stat="QUALIFIED">0</strong><span>Qualified</span></button>
+      <button class="stat-card" data-status-filter="CALL_BOOKED" type="button"><strong data-stat="CALL_BOOKED">0</strong><span>Call booked</span></button>
+      <button class="stat-card" data-status-filter="PROPOSAL_SENT" type="button"><strong data-stat="PROPOSAL_SENT">0</strong><span>Proposals</span></button>
+      <button class="stat-card" data-status-filter="WON" type="button"><strong data-stat="WON">0</strong><span>Won</span></button>
+      <button class="stat-card" data-status-filter="LOST" type="button"><strong data-stat="LOST">0</strong><span>Lost</span></button>
+    </section>
+
+    <!-- Filters -->
+    <section class="filter-row" aria-label="Lead filters">
+      <input type="search" id="lead-search" placeholder="Search name, email, business…" aria-label="Search leads">
+      <select id="service-filter" aria-label="Filter by service">
+        <option value="">All services</option>
+      </select>
+      <select id="source-filter" aria-label="Filter by source">
+        <option value="">All sources</option>
+        <option>website</option><option>instagram</option><option>linkedin</option>
+        <option>google</option><option>referral</option><option>direct</option><option>other</option>
+      </select>
+      <select id="sort-select" aria-label="Sort order">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+    </section>
+
+    <div class="leads-layout">
+      <!-- Table -->
+      <section class="table-wrap" aria-label="Leads table">
+        <table class="lead-table">
+          <thead>
+            <tr><th>Name</th><th>Business</th><th>Service</th><th>Status</th><th>Source</th><th>Created</th></tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <tr><td colspan="6" class="table-empty">Loading…</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Detail panel -->
+      <aside class="detail-panel" id="detail-panel" hidden aria-label="Lead details">
+        <div class="detail-head">
+          <h2 id="d-name">—</h2>
+          <button class="detail-close" id="detail-close" type="button" aria-label="Close details">×</button>
+        </div>
+        <dl class="detail-grid">
+          <div><dt>Email</dt><dd><a id="d-email" href="#"></a></dd></div>
+          <div><dt>WhatsApp</dt><dd id="d-whatsapp">—</dd></div>
+          <div><dt>Business</dt><dd id="d-business">—</dd></div>
+          <div><dt>Website</dt><dd id="d-website">—</dd></div>
+          <div><dt>Business type</dt><dd id="d-type">—</dd></div>
+          <div><dt>Service</dt><dd id="d-service">—</dd></div>
+          <div><dt>Timeline</dt><dd id="d-timeline">—</dd></div>
+          <div><dt>Budget</dt><dd id="d-budget">—</dd></div>
+          <div><dt>Source</dt><dd id="d-source">—</dd></div>
+          <div><dt>UTM</dt><dd id="d-utm">—</dd></div>
+          <div><dt>Created</dt><dd id="d-created">—</dd></div>
+          <div><dt>Updated</dt><dd id="d-updated">—</dd></div>
+        </dl>
+        <p class="detail-desc" id="d-description"></p>
+
+        <label class="detail-label" for="d-status-select">Status</label>
+        <div class="status-actions">
+          <select id="d-status-select">
+            <option>NEW</option><option>CONTACTED</option><option>QUALIFIED</option>
+            <option>CALL_BOOKED</option><option>PROPOSAL_SENT</option><option>NEGOTIATION</option>
+            <option>WON</option><option>LOST</option>
+          </select>
+          <button class="btn-admin btn-admin--ghost btn-admin--sm" type="button" data-quick-status="CONTACTED">Mark contacted</button>
+          <button class="btn-admin btn-admin--ghost btn-admin--sm" type="button" data-quick-status="QUALIFIED">Mark qualified</button>
+        </div>
+
+        <label class="detail-label" for="d-notes">Notes</label>
+        <textarea id="d-notes" rows="5" placeholder="Called on… / interested in… / proposal sent…"></textarea>
+        <div class="detail-save-row">
+          <button class="btn-admin btn-admin--primary" id="save-btn" type="button">Save changes</button>
+          <span class="save-msg" id="save-msg" role="status"></span>
+        </div>
+        <div class="detail-links">
+          <a id="d-wa-link" href="#" target="_blank" rel="noopener">Open WhatsApp ↗</a>
+          <a id="d-mail-link" href="#">Send email ↗</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

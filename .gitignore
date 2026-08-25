@@ -1,0 +1,13 @@
+# Secrets & local configuration
+.env
+.env.local
+.env.*.local
+data/
+*.log
+
+# OS noise
+Thumbs.db
+.DS_Store
+
+# Dependencies (none required, but just in case)
+node_modules/

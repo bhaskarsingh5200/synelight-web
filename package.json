@@ -1,0 +1,15 @@
+{
+  "name": "synelight-web",
+  "version": "1.0.0",
+  "description": "SYNELIGHT — AI, Automation & Digital Growth Agency",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "build": "node scripts/build-sitemap.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["synelight", "agency", "ai", "automation"],
+  "license": "UNLICENSED"
+}
