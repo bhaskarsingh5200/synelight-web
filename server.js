@@ -200,8 +200,10 @@ function timingSafePasswordMatch(input, expected) {
 
 async function handleSiteConfig(res) {
   const cfg = {};
-  const wa = env.get("WHATSAPP_NUMBER");
-  if (wa) cfg.whatsappNumber = wa.replace(/[^0-9]/g, "");
+  const wa = env.get("WHATSAPP_NUMBER", "8409405200");
+  let waNum = (wa || "").replace(/[^0-9]/g, "");
+  if (waNum && /^\d{10}$/.test(waNum)) waNum = "91" + waNum;
+  if (waNum) cfg.whatsappNumber = waNum;
   if (env.get("BOOKING_URL")) cfg.bookingUrl = env.get("BOOKING_URL");
   if (env.get("GA4_ID")) cfg.ga4Id = env.get("GA4_ID");
   if (env.get("TURNSTILE_SITE_KEY")) cfg.turnstileSiteKey = env.get("TURNSTILE_SITE_KEY");
