@@ -27,6 +27,7 @@ const logger = require("./lib/logger");
 const db = require("./lib/db");
 const validate = require("./lib/validate");
 const mailer = require("./lib/mailer");
+const whatsapp = require("./lib/whatsapp");
 const limiter = require("./lib/ratelimit");
 
 const ROOT = __dirname;
@@ -266,8 +267,11 @@ async function handleCreateLead(req, res, ip) {
     /* Email must never block or fail the lead creation */
     mailer.notifyInternalLead(created.lead).catch((e) =>
       logger.error("email_failed", { tag: "internal", reason: String(e.message).slice(0, 120) }));
-    mailer.confirmClientLead(created.lead).catch((e) =>
+mailer.confirmClientLead(created.lead).catch((e) =>
       logger.error("email_failed", { tag: "confirmation", reason: String(e.message).slice(0, 120) }));
+    /* WhatsApp must never block or fail the lead creation either */
+    whatsapp.notifyInternalLead(created.lead).catch((e) =>
+      logger.error("whatsapp_failed", { reason: String(e.message).slice(0, 120) }));
   }
 
   json(res, 201, { success: true });
@@ -498,6 +502,8 @@ function validateEnv() {
     warnings.push("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY — running in JSON fallback mode (data/leads.json)");
   if (!env.get("RESEND_API_KEY") && !env.get("MAIL_WEBHOOK_URL") && !env.get("SMTP_HOST"))
     warnings.push("No email transport configured (RESEND_API_KEY, MAIL_WEBHOOK_URL, SMTP_HOST) — emails will be skipped");
+  if (!whatsapp.configured())
+    warnings.push("WHATSAPP_TOKEN / WHATSAPP_PHONE_ID — WhatsApp lead notifications will be skipped");
   if (!env.get("SITE_URL"))
     warnings.push("SITE_URL not set — falling back to http://localhost:" + PORT);
 
@@ -517,6 +523,6 @@ function validateEnv() {
 validateEnv();
 
 server.listen(PORT, "0.0.0.0", () => {
-  logger.log("info", "server_started", { port: PORT, engine: db.activeEngine(), mailer: mailer.activeTransport() });
+  logger.log("info", "server_started", { port: PORT, engine: db.activeEngine(), mailer: mailer.activeTransport(), whatsapp: whatsapp.configured() ? "whatsapp_cloud_api" : "off" });
   console.log("SYNELIGHT running at http://0.0.0.0:" + PORT);
 });
