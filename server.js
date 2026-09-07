@@ -126,18 +126,30 @@ function clientIp(req) {
 function readJsonBody(req, limit) {
   return new Promise((resolve, reject) => {
     let size = 0;
+    let done = false;
     const chunks = [];
-    req.on("data", (c) => {
+    const finish = (err, value) => {
+      if (done) return;
+      done = true;
+      if (err) reject(err); else resolve(value);
+    };
+    const handler = (c) => {
       size += c.length;
-      if (size > limit) { reject(Object.assign(new Error("payload_too_large"), { status: 413 })); req.destroy(); return; }
+      if (size > limit) {
+        /* stop buffering; keep draining the rest so the 413 response flushes cleanly */
+        req.off("data", handler);
+        req.on("data", () => {});
+        return finish(Object.assign(new Error("payload_too_large"), { status: 413 }));
+      }
       chunks.push(c);
-    });
+    };
+    req.on("data", handler);
     req.on("end", () => {
-      if (!chunks.length) return resolve({});
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8"))); }
-      catch { reject(Object.assign(new Error("invalid_json"), { status: 400 })); }
+      if (!chunks.length) return finish(null, {});
+      try { finish(null, JSON.parse(Buffer.concat(chunks).toString("utf8"))); }
+      catch { finish(Object.assign(new Error("invalid_json"), { status: 400 })); }
     });
-    req.on("error", reject);
+    req.on("error", finish);
   });
 }
 
