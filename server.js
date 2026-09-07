@@ -583,6 +583,20 @@ if (pathname === "/api/site-config" && req.method === "GET") {
       return res.end();
     }
 
+    /* Legacy /insights/<slug>/ static articles -> new /blog/<slug>/ */
+    if (pathname === "/insights/ai-agents-for-business/") {
+      res.writeHead(301, { Location: "/blog/ai-agents-for-business/" });
+      return res.end();
+    }
+    if (pathname === "/insights/fast-websites-win-customers/") {
+      res.writeHead(301, { Location: "/blog/why-fast-websites-win-more-customers/" });
+      return res.end();
+    }
+    if (pathname === "/insights/automated-lead-followup/") {
+      res.writeHead(301, { Location: "/blog/automated-lead-followup-system/" });
+      return res.end();
+    }
+
     /* ---- Static ---- */
     if (isDenied(pathname)) return notFound(res);
 
