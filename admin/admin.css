@@ -47,6 +47,10 @@ body.admin-body {
 .btn-admin--primary:hover { transform: translateY(-1px); }
 .btn-admin--ghost { background: transparent; color: var(--a-soft); border: 1px solid var(--a-border); }
 .btn-admin--ghost:hover { border-color: rgba(32,199,217,.45); }
+.btn-admin--danger { background: transparent; color: #F87171; border: 1px solid rgba(248,113,113,.4); }
+.btn-admin--danger:hover { border-color: #F87171; background: rgba(248,113,113,.08); }
+.btn-admin--danger:disabled { opacity:.5; cursor: not-allowed; }
+.detail-danger { display: flex; align-items: center; gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--a-border); }
 
 /* Login */
 .admin-body--center { display: grid; place-items: center; }

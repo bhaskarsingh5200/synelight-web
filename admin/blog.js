@@ -68,6 +68,7 @@
     document.getElementById("b-slug").value = post ? post.slug : "";
     document.getElementById("b-status").value = post ? post.status : "draft";
     document.getElementById("b-excerpt").value = post ? post.excerpt : "";
+    document.getElementById("b-cover").value = post ? (post.cover || "") : "";
     document.getElementById("b-body").value = post ? post.body : "";
     document.getElementById("delete-post-btn").hidden = !post;
     var viewBtn = document.getElementById("view-post-btn");
@@ -89,6 +90,7 @@
       slug: document.getElementById("b-slug").value,
       status: document.getElementById("b-status").value,
       excerpt: document.getElementById("b-excerpt").value,
+      cover: document.getElementById("b-cover").value,
       body: document.getElementById("b-body").value
     };
     if (!payload.title.trim()) { msg.textContent = "Title is required."; msg.classList.add("err"); return; }

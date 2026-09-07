@@ -171,6 +171,30 @@
     renderTable();
   });
 
+  document.getElementById("delete-lead-btn").addEventListener("click", function () {
+    if (!state.selectedId) return;
+    if (!window.confirm("Delete this lead permanently? This cannot be undone.")) return;
+    var btn = document.getElementById("delete-lead-btn");
+    btn.disabled = true;
+    fetch("/api/admin/leads/" + encodeURIComponent(state.selectedId), { method: "DELETE" })
+      .then(function (r) {
+        if (r.status === 401) { location.href = "/admin/login/"; return null; }
+        return r.json();
+      })
+      .then(function (j) {
+        if (!j || !j.success) throw new Error("failed");
+        document.getElementById("detail-panel").hidden = true;
+        state.selectedId = null;
+        loadStats();
+        loadLeads();
+      })
+      .catch(function () {
+        btn.disabled = false;
+        var m = document.getElementById("delete-msg");
+        if (m) m.textContent = "Delete failed — try again.";
+      });
+  });
+
   function saveLead(patch, msgEl) {
     if (!state.selectedId) return;
     fetch("/api/admin/leads/" + encodeURIComponent(state.selectedId), {

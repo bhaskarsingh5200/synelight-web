@@ -83,3 +83,35 @@ alter table public.leads enable row level security;
 -- run periodically (e.g. monthly via Supabase scheduled job):
 --   insert into leads_archive select * from public.leads where created_at < now() - interval '24 months';
 --   delete from public.leads       where created_at < now() - interval '24 months';
+
+-- ============================================================
+-- SYNELIGHT -- blog table (posts for the /blog/ CMS)
+-- Same security model as leads: the server uses the service_role
+-- key (bypasses RLS), RLS is enabled with no public policies.
+-- ============================================================
+
+create table if not exists public.blog (
+  id               uuid primary key default gen_random_uuid(),
+  slug             text        not null,
+  title            text        not null,
+  category         text        not null default 'Insights',
+  excerpt          text        not null default '',
+  cover            text        not null default '',
+  body             text        not null default '',
+  author           text        not null default 'SYNELIGHT',
+  date             timestamptz,
+  updated_at       timestamptz not null default now(),
+  status           text        not null default 'draft',
+  reading_minutes  int         not null default 1
+);
+
+alter table public.blog
+  add constraint blog_status_check
+  check (status in ('draft', 'published'));
+
+create unique index if not exists blog_slug_key  on public.blog (slug);
+create index if not exists blog_status_key      on public.blog (status);
+create index if not exists blog_date_idx        on public.blog (date desc);
+
+alter table public.blog enable row level security;
+-- No policies on purpose (same rationale as the leads table).

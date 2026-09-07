@@ -33,7 +33,7 @@ const validate = require("./lib/validate");
 const mailer = require("./lib/mailer");
 const whatsapp = require("./lib/whatsapp");
 const limiter = require("./lib/ratelimit");
-const blog = require("./lib/blogstore");
+const blog = require("./lib/blogdb");
 const blogrender = require("./lib/blogrender");
 
 const ROOT = __dirname;
@@ -357,7 +357,7 @@ async function handleAdminApi(req, res, pathname, query, ip) {
       return json(res, 200, { success: true, lead });
     } catch { return json(res, 500, { success: false }); }
   }
-  if (m && req.method === "PATCH") {
+if (m && req.method === "PATCH") {
     let body;
     try { body = await readJsonBody(req, 8 * 1024); }
     catch { return json(res, 400, { success: false }); }
@@ -371,6 +371,13 @@ async function handleAdminApi(req, res, pathname, query, ip) {
       const lead = await db.updateLead(m[1], patch);
       if (!lead) return json(res, 404, { success: false });
       return json(res, 200, { success: true, lead });
+    } catch { return json(res, 500, { success: false }); }
+  }
+  if (m && req.method === "DELETE") {
+    try {
+      const removed = await db.removeLead(m[1]);
+      if (!removed) return json(res, 404, { success: false, message: "Not found." });
+      return json(res, 200, { success: true });
     } catch { return json(res, 500, { success: false }); }
   }
 
@@ -390,31 +397,31 @@ if (pathname === "/api/admin/leads" && req.method === "GET") {
   /* ---- Blog management ---- */
   const bm = pathname.match(/^\/api\/admin\/blog\/([0-9a-f-]{36})$/i);
   if (bm && req.method === "GET") {
-    const post = blog.getById(bm[1]);
+    const post = await blog.getById(bm[1]);
     return post ? json(res, 200, { success: true, post }) : json(res, 404, { success: false, message: "Not found." });
   }
   if (bm && req.method === "PATCH") {
     let body;
     try { body = await readJsonBody(req, 64 * 1024); }
     catch { return json(res, 400, { success: false }); }
-    const result = blog.update(bm[1], body);
+    const result = await blog.update(bm[1], body);
     if (result.error) return json(res, 400, { success: false, message: result.error });
     if (!result.post) return json(res, 404, { success: false, message: "Not found." });
     return json(res, 200, { success: true, post: result.post });
   }
   if (bm && req.method === "DELETE") {
-    return blog.remove(bm[1])
+    return (await blog.remove(bm[1]))
       ? json(res, 200, { success: true })
       : json(res, 404, { success: false, message: "Not found." });
   }
   if (pathname === "/api/admin/blog" && req.method === "GET") {
-    return json(res, 200, { success: true, posts: blog.list({ all: true, q: query.get("q") || "" }) });
+    return json(res, 200, { success: true, posts: await blog.list({ all: true, q: query.get("q") || "" }) });
   }
   if (pathname === "/api/admin/blog" && req.method === "POST") {
     let body;
     try { body = await readJsonBody(req, 64 * 1024); }
     catch { return json(res, 400, { success: false }); }
-    const result = blog.create(body);
+    const result = await blog.create(body);
     if (result.error) return json(res, 400, { success: false, message: result.error });
     return json(res, 201, { success: true, post: result.post });
   }
@@ -454,7 +461,11 @@ function blogGridCards(posts) {
       "</div>";
   }
   return posts.map(function (p) {
-    return '<article class="card insight-card">' +
+    const cover = /^https?:\/\//.test(String(p.cover || ""))
+      ? '<img class="insight-cover" src="' + blogrender.esc(p.cover) + '" alt="' + blogrender.esc(p.title) + '" loading="lazy">'
+      : "";
+    return '<article class="card insight-card" data-cat="' + blogrender.esc(p.category) + '">' +
+      cover +
       '<p class="insight-cat">' + blogrender.esc(p.category) + "</p>" +
       '<h3><a href="' + encodeURIComponent(p.slug) + '/" style="color:inherit;text-decoration:none;">' + blogrender.esc(p.title) + "</a></h3>" +
       "<p>" + blogrender.esc(p.excerpt) + "</p>" +
@@ -467,18 +478,21 @@ function blogGridCards(posts) {
 async function serveBlogIndex(res) {
   const tpl = await readPage("blog/index.html");
   if (!tpl) return notFound(res);
-  const posts = blog.list({ status: "published" });
+  const posts = await blog.list({ status: "published" });
   const html = tpl.toString("utf8").split("<!--SL_BLOG_GRID-->").join(blogGridCards(posts));
   return serve(res, 200, "text/html; charset=utf-8", html);
 }
 
+const DEFAULT_OG_IMAGE = "https://synelight.com/assets/og-image.png";
+
 async function serveBlogPost(res, slug) {
-  const post = blog.getBySlug(slug);
+  const post = await blog.getBySlug(slug);
   if (!post) return notFound(res);
   const tpl = await readPage("blog/post.html");
   if (!tpl) return notFound(res);
   const canonical = "https://synelight.com/blog/" + encodeURIComponent(slug) + "/";
   const esc = blogrender.esc;
+  const ogImage = /^https?:\/\//.test(String(post.cover || "")) ? post.cover : DEFAULT_OG_IMAGE;
   const tokens = {
     "__SL_TITLE__": esc(post.title),
     "__SL_DESCRIPTION__": esc(post.excerpt || post.title),
@@ -488,6 +502,10 @@ async function serveBlogPost(res, slug) {
     "__SL_READMIN__": post.reading_minutes + " min read",
     "__SL_AUTHOR__": esc(post.author),
     "__SL_ISO__": post.date,
+    "__SL_COVER_OG__": ogImage,
+    "__SL_COVER__": /^https?:\/\//.test(String(post.cover || ""))
+      ? '<figure class="article-cover"><img src="' + esc(post.cover) + '" alt="' + esc(post.title) + '" loading="lazy"></figure>'
+      : "",
     "__SL_BODY__": blogrender.render(post.body)
   };
   let html = tpl.toString("utf8");
@@ -537,11 +555,11 @@ if (pathname === "/api/site-config" && req.method === "GET") {
       return handleSiteConfig(res);
     }
     if (pathname === "/api/blog" && req.method === "GET") {
-      return json(res, 200, { success: true, posts: blog.list({ status: "published" }) });
+      return json(res, 200, { success: true, posts: await blog.list({ status: "published" }) });
     }
     const blogM = pathname.match(/^\/api\/blog\/([a-z0-9-]{1,120})$/i);
     if (blogM && req.method === "GET") {
-      const post = blog.getBySlug(blogM[1]);
+      const post = await blog.getBySlug(blogM[1]);
       if (!post) return json(res, 404, { success: false, message: "Post not found." });
       return json(res, 200, { success: true, post });
     }
