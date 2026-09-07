@@ -5,6 +5,10 @@
    Routes:
      GET  /api/site-config      public safe configuration
      GET  /api/healthz          uptime probe
+     GET  /api/blog             published blog posts
+     GET  /api/blog/:slug       single published post
+     GET  /blog/                blog listing (server-rendered)
+     GET  /blog/:slug           blog post page (server-rendered)
      POST /api/leads            create enquiry (validated + rate limited)
      POST /api/admin/login      password auth -> HttpOnly session cookie
      POST /api/admin/logout     destroy session
@@ -29,6 +33,8 @@ const validate = require("./lib/validate");
 const mailer = require("./lib/mailer");
 const whatsapp = require("./lib/whatsapp");
 const limiter = require("./lib/ratelimit");
+const blog = require("./lib/blogstore");
+const blogrender = require("./lib/blogrender");
 
 const ROOT = __dirname;
 const PORT = env.int("PORT", 3000);
@@ -356,7 +362,7 @@ async function handleAdminApi(req, res, pathname, query, ip) {
     } catch { return json(res, 500, { success: false }); }
   }
 
-  if (pathname === "/api/admin/leads" && req.method === "GET") {
+if (pathname === "/api/admin/leads" && req.method === "GET") {
     try {
       const leads = await db.listLeads({
         status: query.get("status") || "",
@@ -367,6 +373,38 @@ async function handleAdminApi(req, res, pathname, query, ip) {
       });
       return json(res, 200, { success: true, leads });
     } catch { return json(res, 500, { success: false }); }
+  }
+
+  /* ---- Blog management ---- */
+  const bm = pathname.match(/^\/api\/admin\/blog\/([0-9a-f-]{36})$/i);
+  if (bm && req.method === "GET") {
+    const post = blog.getById(bm[1]);
+    return post ? json(res, 200, { success: true, post }) : json(res, 404, { success: false, message: "Not found." });
+  }
+  if (bm && req.method === "PATCH") {
+    let body;
+    try { body = await readJsonBody(req, 64 * 1024); }
+    catch { return json(res, 400, { success: false }); }
+    const result = blog.update(bm[1], body);
+    if (result.error) return json(res, 400, { success: false, message: result.error });
+    if (!result.post) return json(res, 404, { success: false, message: "Not found." });
+    return json(res, 200, { success: true, post: result.post });
+  }
+  if (bm && req.method === "DELETE") {
+    return blog.remove(bm[1])
+      ? json(res, 200, { success: true })
+      : json(res, 404, { success: false, message: "Not found." });
+  }
+  if (pathname === "/api/admin/blog" && req.method === "GET") {
+    return json(res, 200, { success: true, posts: blog.list({ all: true, q: query.get("q") || "" }) });
+  }
+  if (pathname === "/api/admin/blog" && req.method === "POST") {
+    let body;
+    try { body = await readJsonBody(req, 64 * 1024); }
+    catch { return json(res, 400, { success: false }); }
+    const result = blog.create(body);
+    if (result.error) return json(res, 400, { success: false, message: result.error });
+    return json(res, 201, { success: true, post: result.post });
   }
 
   json(res, 404, { success: false, message: "Unknown admin endpoint." });
@@ -386,6 +424,63 @@ function readPage(file) {
   return new Promise((resolve) => {
     fs.readFile(path.join(ROOT, file), (err, data) => resolve(err ? null : data));
   });
+}
+
+/* ---------------- Blog helpers ---------------- */
+
+function blogDate(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-US", { timeZone: "UTC", month: "long", year: "numeric" });
+}
+
+function blogGridCards(posts) {
+  if (!posts || !posts.length) {
+    return '<div class="empty-state reveal" style="margin-top:40px;">' +
+      '<strong>Articles are on the way</strong>' +
+      "New posts are published regularly across AI, Automation, Websites, Lead Generation and Digital Growth." +
+      "</div>";
+  }
+  return posts.map(function (p) {
+    return '<article class="card insight-card">' +
+      '<p class="insight-cat">' + blogrender.esc(p.category) + "</p>" +
+      '<h3><a href="' + encodeURIComponent(p.slug) + '/" style="color:inherit;text-decoration:none;">' + blogrender.esc(p.title) + "</a></h3>" +
+      "<p>" + blogrender.esc(p.excerpt) + "</p>" +
+      '<p class="insight-date">' + blogrender.esc(p.category) + " · " + blogDate(p.date) + " · " + p.reading_minutes + " min read</p>" +
+      '<a class="link-arrow" href="' + encodeURIComponent(p.slug) + '/" style="margin-top:18px;">Read Article <span class="arr" aria-hidden="true">→</span></a>' +
+      "</article>";
+  }).join("\n");
+}
+
+async function serveBlogIndex(res) {
+  const tpl = await readPage("blog/index.html");
+  if (!tpl) return notFound(res);
+  const posts = blog.list({ status: "published" });
+  const html = tpl.toString("utf8").split("<!--SL_BLOG_GRID-->").join(blogGridCards(posts));
+  return serve(res, 200, "text/html; charset=utf-8", html);
+}
+
+async function serveBlogPost(res, slug) {
+  const post = blog.getBySlug(slug);
+  if (!post) return notFound(res);
+  const tpl = await readPage("blog/post.html");
+  if (!tpl) return notFound(res);
+  const canonical = "https://synelight.com/blog/" + encodeURIComponent(slug) + "/";
+  const esc = blogrender.esc;
+  const tokens = {
+    "__SL_TITLE__": esc(post.title),
+    "__SL_DESCRIPTION__": esc(post.excerpt || post.title),
+    "__SL_CANONICAL__": canonical,
+    "__SL_CATEGORY__": esc(post.category),
+    "__SL_DATE__": blogDate(post.date),
+    "__SL_READMIN__": post.reading_minutes + " min read",
+    "__SL_AUTHOR__": esc(post.author),
+    "__SL_ISO__": post.date,
+    "__SL_BODY__": blogrender.render(post.body)
+  };
+  let html = tpl.toString("utf8");
+  for (const key of Object.keys(tokens)) html = html.split(key).join(tokens[key]);
+  return serve(res, 200, "text/html; charset=utf-8", html);
 }
 
 function isDenied(p) {
@@ -426,8 +521,17 @@ const server = http.createServer(async (req, res) => {
     if (pathname === "/api/healthz" && req.method === "GET") {
       return json(res, 200, { ok: true, engine: db.activeEngine(), time: new Date().toISOString() });
     }
-    if (pathname === "/api/site-config" && req.method === "GET") {
+if (pathname === "/api/site-config" && req.method === "GET") {
       return handleSiteConfig(res);
+    }
+    if (pathname === "/api/blog" && req.method === "GET") {
+      return json(res, 200, { success: true, posts: blog.list({ status: "published" }) });
+    }
+    const blogM = pathname.match(/^\/api\/blog\/([a-z0-9-]{1,120})$/i);
+    if (blogM && req.method === "GET") {
+      const post = blog.getBySlug(blogM[1]);
+      if (!post) return json(res, 404, { success: false, message: "Post not found." });
+      return json(res, 200, { success: true, post });
     }
     if (pathname === "/api/leads") {
       if (req.method !== "POST") { res.setHeader("Allow", "POST"); return json(res, 405, { success: false }); }
@@ -439,20 +543,32 @@ const server = http.createServer(async (req, res) => {
     }
     if (pathname.startsWith("/api/")) return json(res, 404, { success: false });
 
-    /* ---- Admin pages ---- */
-    if (pathname === "/admin" || pathname === "/admin/" || pathname.indexOf("/admin/leads") === 0) {
+/* ---- Admin pages ---- */
+    if (pathname === "/admin" || pathname === "/admin/" ||
+        pathname === "/admin/leads" || pathname === "/admin/leads/" ||
+        pathname === "/admin/blog" || pathname === "/admin/blog/") {
       if (isAuthed(req)) {
-        const dash = await readPage("admin/dashboard.html");
+        const page = pathname === "/admin/blog" || pathname === "/admin/blog/" ? "admin/blog.html" : "admin/dashboard.html";
+        const dash = await readPage(page);
         if (dash) return serve(res, 200, "text/html; charset=utf-8", dash);
       } else {
         res.writeHead(302, { Location: "/admin/login/" });
         return res.end();
       }
     }
-    if (pathname.indexOf("/admin/login") === 0) {
+    if (pathname === "/admin/login" || pathname === "/admin/login/") {
       if (isAuthed(req)) { res.writeHead(302, { Location: "/admin/leads/" }); return res.end(); }
       const page = await readPage("admin/login.html");
       if (page) return serve(res, 200, "text/html; charset=utf-8", page);
+    }
+
+    /* ---- Blog pages (server-rendered) ---- */
+    if (pathname === "/blog/") return serveBlogIndex(res);
+    const blogPageM = pathname.match(/^\/blog\/([a-z0-9-]{1,120})\/?$/i);
+    if (blogPageM) return serveBlogPost(res, blogPageM[1]);
+    if (pathname === "/insights/" || pathname === "/insights") {
+      res.writeHead(301, { Location: "/blog/" });
+      return res.end();
     }
 
     /* ---- Static ---- */

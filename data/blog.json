@@ -1,0 +1,41 @@
+[
+  {
+    "id": "b0000000-0000-4000-8000-000000000001",
+    "slug": "why-fast-websites-win-more-customers",
+    "title": "Why Fast Websites Win More Customers",
+    "category": "Websites",
+    "excerpt": "Speed isn't a technical vanity metric. It shapes first impressions, search visibility and whether visitors ever see your offer at all.",
+    "body": "## Speed is a business metric\n\nMost website projects start with the wrong question. \"What should it look like?\" is asked before \"How fast will it feel?\"\n\nSpeed isn't a technical vanity metric. It shapes first impressions, search visibility and whether visitors ever see your offer at all.\n\n## What slow websites actually cost\n\n- Visitors comparing three suppliers simply abandon the slowest one\n- Search engines treat page speed as a ranking signal\n- Every extra second of load time measurably reduces conversions\n\nNone of this is new. But it matters more as AI review and mobile browsing push attention spans down.\n\n## Where speed really comes from\n\n- A lean front end: no framework tax, no hero carousels\n- Images sized and compressed for the exact space they fill\n- Critical CSS inlined so the first paint doesn't wait on a round trip\n- A fast, simple server instead of twenty third-party scripts\n\n## The honest summary\n\nA fast website is not a luxury feature. It is the foundation that every other marketing system sits on. If visitors leave before reading, nothing downstream matters.\n\nBuild fast first, then make it beautiful.",
+    "author": "SYNELIGHT",
+    "date": "2026-07-10T09:00:00.000Z",
+    "updated_at": "2026-07-12T09:00:00.000Z",
+    "status": "published",
+    "reading_minutes": 4
+  },
+  {
+    "id": "b0000000-0000-4000-8000-000000000002",
+    "slug": "automated-lead-followup-system",
+    "title": "Stop Losing Leads: The Case for Automated Follow-Up",
+    "category": "Lead Generation",
+    "excerpt": "Most businesses don't have a lead problem — they have a response-time problem. Here's how automated follow-up fixes it without sounding robotic.",
+    "body": "## The response-time problem\n\nMost businesses don't have a lead problem. They have a response-time problem.\n\nEvery enquiry that lands in an inbox and waits is a lead already moving toward a competitor. The businesses that win are not the best ones — they are simply the first ones.\n\n## Why businesses respond slowly\n\nThe lead isn't ignored on purpose. It is lost in the noise of a busy day, a shared email, a holiday weekend.\n\n## What a follow-up system does\n\n- Confirms the enquiry instantly so the visitor knows they were heard\n- Sends the details to the team with context, not as a raw dump\n- Escalates politely if nobody responds within a set window\n- Keeps one clean record of every touch, instead of five threads\n\n## Automation without sounding robotic\n\nThe goal is not to spam. The goal is to be fast and human. Short, specific messages that reference what the prospect actually asked for read as care — not as a template.\n\n## The bottom line\n\nConsistency creates revenue. A structured follow-up system turns a leaky inbox into a repeatable sales motion, and it does it quietly in the background.",
+    "author": "SYNELIGHT",
+    "date": "2026-06-22T09:00:00.000Z",
+    "updated_at": "2026-06-22T09:00:00.000Z",
+    "status": "published",
+    "reading_minutes": 5
+  },
+  {
+    "id": "b0000000-0000-4000-8000-000000000003",
+    "slug": "ai-agents-for-business",
+    "title": "What AI Agents Can (and Can't) Do for Your Business",
+    "category": "AI",
+    "excerpt": "Cutting through the hype: where AI agents genuinely create value today, where they don't belong yet, and how to tell the difference before you spend money.",
+    "body": "## First, a definition\n\nAn AI agent isn't just a chatbot that answers questions from a document. An agent takes goal-directed action inside your systems: it reads an incoming request, decides what to do based on rules you define, executes that action — replying, booking, updating a record — and reports what it did.\n\n## Where agents genuinely create value today\n\n### 1. First-response speed\n\nCustomers judge responsiveness within minutes. An agent that acknowledges every inquiry instantly, answers common questions and collects the right details changes the tone of the entire relationship — before a human ever gets involved.\n\n### 2. Repetitive qualification\n\nAsking every lead the same five questions is exactly what machines are for. Agents qualify consistently against your criteria, score the results and route hot opportunities to your team while colder ones enter nurturing.\n\n### 3. Structured data entry\n\nConversations contain information; CRMs need fields. Agents bridge that gap — extracting names, needs, timelines and budgets from unstructured messages and writing them where they belong.\n\n## Where they don't belong (yet)\n\n### Negotiation and closing\n\nHigh-stakes conversations involve trust, nuance and judgment that customers extend to people, not software. Keep humans here.\n\n### Open-ended problem solving\n\nAn agent given vague authority will eventually do something confident and wrong. Scope wins: narrow tasks, clear boundaries, defined escalation paths.\n\n## The test we apply before building one\n\n- Is the task repetitive enough that consistency itself creates value?\n- Can success be measured objectively?\n- Is there a clear handover point to a human?\n\nIf the answer is no, automation without agents usually serves better. Businesses that understand this distinction build useful systems. The rest buy demos.",
+    "author": "SYNELIGHT",
+    "date": "2026-08-14T09:00:00.000Z",
+    "updated_at": "2026-08-14T09:00:00.000Z",
+    "status": "published",
+    "reading_minutes": 5
+  }
+]

@@ -29,13 +29,18 @@ const PAGES = [
   { loc: "/work/ironcore-fitness/",    changefreq: "yearly",  priority: "0.6" },
   { loc: "/process/",                  changefreq: "yearly",  priority: "0.6" },
   { loc: "/about/",                    changefreq: "yearly",  priority: "0.6" },
-  { loc: "/insights/",                 changefreq: "weekly",  priority: "0.7" },
-  { loc: "/insights/ai-agents-for-business/",         changefreq: "yearly", priority: "0.5" },
-  { loc: "/insights/fast-websites-win-customers/",    changefreq: "yearly", priority: "0.5" },
-  { loc: "/insights/automated-lead-followup/",        changefreq: "yearly", priority: "0.5" },
+  { loc: "/blog/",                      changefreq: "weekly",  priority: "0.7" },
   { loc: "/contact/",                  changefreq: "yearly",  priority: "0.9" },
   { loc: "/faq/",                      changefreq: "yearly",  priority: "0.5" }
 ];
+
+/* Dynamic: published blog posts from data/blog.json */
+const blogFile = path.join(ROOT, "data", "blog.json");
+try {
+  const posts = JSON.parse(fs.readFileSync(blogFile, "utf8"));
+  posts.filter(function (p) { return p.status === "published"; })
+    .forEach(function (p) { PAGES.push({ loc: "/blog/" + p.slug + "/", changefreq: "monthly", priority: "0.6" }); });
+} catch {}
 
 /* ---- sitemap.xml ---- */
 const sitemapLines = [

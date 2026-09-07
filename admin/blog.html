@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog — SYNELIGHT Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#060B18">
+  <link rel="icon" type="image/png" href="/assets/icons/favicon-32x32.png">
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-topbar">
+    <div class="admin-topbar-left">
+      <img src="/assets/logo.png" alt="" width="44" height="29">
+      <span class="admin-topbar-title">SYNELIGHT <em>Blog</em></span>
+    </div>
+    <div class="admin-topbar-right">
+      <span id="engine-badge" class="engine-badge"></span>
+      <a href="/" target="_blank" rel="noopener">View site ↗</a>
+      <button id="logout-btn" class="btn-admin btn-admin--ghost btn-admin--sm" type="button">Log out</button>
+    </div>
+  </header>
+
+  <nav class="admin-tabs" aria-label="Admin sections">
+    <a href="/admin/leads/">Leads</a>
+    <a href="/admin/blog/" class="is-active">Blog</a>
+  </nav>
+
+  <main class="admin-main">
+    <div class="page-head">
+      <h1 class="page-title">Blog posts <small id="blog-count">—</small></h1>
+      <button class="btn-admin btn-admin--primary btn-admin--sm" id="new-post-btn" type="button">+ New post</button>
+    </div>
+
+    <div class="blog-list" id="blog-list">
+      <p class="blog-empty">Loading…</p>
+    </div>
+
+    <section class="blog-editor" id="blog-editor" hidden aria-label="Post editor">
+      <div class="fe-grid">
+        <div class="fe">
+          <label for="b-title">Title *</label>
+          <input id="b-title" type="text" maxlength="120" required>
+        </div>
+        <div class="fe">
+          <label for="b-category">Category</label>
+          <input id="b-category" type="text" maxlength="60" placeholder="AI, Automation, Websites…">
+        </div>
+        <div class="fe">
+          <label for="b-slug">Slug</label>
+          <input id="b-slug" type="text" maxlength="120" placeholder="auto-generated from title">
+        </div>
+        <div class="fe">
+          <label for="b-status">Status</label>
+          <select id="b-status">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+      </div>
+      <div class="fe" style="margin-top:14px;">
+        <label for="b-excerpt">Excerpt (meta description)</label>
+        <textarea id="b-excerpt" rows="2" maxlength="300"></textarea>
+      </div>
+      <div class="fe" style="margin-top:14px;">
+        <label for="b-body">Body</label>
+        <textarea id="b-body" rows="14" placeholder="## Heading&#10;&#10;Paragraph text…&#10;&#10;- Bullet point&#10;- Second point&#10;&#10;&gt; A quote"></textarea>
+      </div>
+      <p class="editor-hint">Formatting: ## Heading · ### Sub-heading · - bullet · &gt; quote. Blank lines separate paragraphs. HTML is escaped for safety.</p>
+      <div class="editor-actions">
+        <button class="btn-admin btn-admin--primary" id="save-post-btn" type="button">Save post</button>
+        <button class="btn-admin btn-admin--ghost" id="cancel-post-btn" type="button">Cancel</button>
+        <span class="spacer"></span>
+        <a class="btn-admin btn-admin--ghost btn-admin--sm" id="view-post-btn" href="#" target="_blank" rel="noopener" hidden>View on site ↗</a>
+        <button class="btn-admin btn-admin--ghost btn-admin--sm" id="delete-post-btn" type="button" hidden>Delete</button>
+        <span class="msg" id="blog-msg" role="status"></span>
+      </div>
+    </section>
+  </main>
+
+  <script src="/admin/blog.js"></script>
+  <script>
+    fetch("/api/healthz").then(function (r) { return r.json(); }).then(function (j) {
+      var badge = document.getElementById("engine-badge");
+      if (badge && j.engine) badge.textContent = "db: " + j.engine;
+    }).catch(function () {});
+  </script>
+</body>
+</html>
