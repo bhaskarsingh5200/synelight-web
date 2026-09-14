@@ -1,0 +1,6 @@
+# Files excluded from Vercel deployments.
+# Runtime data (data/) is meant for local/JSON fallback only and must never ship.
+data
+node_modules
+.git
+.github

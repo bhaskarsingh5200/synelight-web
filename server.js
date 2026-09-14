@@ -169,35 +169,37 @@ function parseCookies(req) {
 
 const SESSION_COOKIE = "sl_admin_session";
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; /* 8 hours, sliding */
-const sessions = new Map(); /* token -> expiresAt */
+/* Stateless HMAC-signed cookie sessions — required on serverless platforms
+   (Vercel) where in-memory stores do not survive across invocations. */
+const SESSION_SECRET =
+  env.get("SESSION_SECRET") || env.get("ADMIN_PASSWORD") || "synelight-dev-session-secret";
 
-function pruneSessions() {
-  const now = Date.now();
-  for (const [tok, exp] of sessions) if (exp < now) sessions.delete(tok);
+function signSession(payload) {
+  return crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
 }
-setInterval(pruneSessions, 15 * 60 * 1000).unref();
 
 function createSession(res, secure) {
-  const token = crypto.randomBytes(32).toString("hex");
-  sessions.set(token, Date.now() + SESSION_TTL_MS);
+  const payload = String(Date.now() + SESSION_TTL_MS) + "." + crypto.randomBytes(32).toString("hex");
   res.setHeader("Set-Cookie",
-    SESSION_COOKIE + "=" + token + "; Path=/; HttpOnly; SameSite=Strict" +
+    SESSION_COOKIE + "=" + payload + "." + signSession(payload) +
+    "; Path=/; HttpOnly; SameSite=Strict" +
     (secure ? "; Secure" : "") + "; Max-Age=" + Math.floor(SESSION_TTL_MS / 1000));
 }
 
 function destroySession(req, res) {
-  const cookies = parseCookies(req);
-  if (cookies[SESSION_COOKIE]) sessions.delete(cookies[SESSION_COOKIE]);
   res.setHeader("Set-Cookie", SESSION_COOKIE + "=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");
 }
 
 function isAuthed(req) {
-  pruneSessions();
-  const cookies = parseCookies(req);
-  const tok = cookies[SESSION_COOKIE];
-  if (!tok || !sessions.has(tok)) return false;
-  sessions.set(tok, Date.now() + SESSION_TTL_MS); /* sliding */
-  return true;
+  const raw = parseCookies(req)[SESSION_COOKIE];
+  if (!raw) return false;
+  const parts = raw.split(".");
+  if (parts.length !== 3) return false;
+  const exp = Number(parts[0]);
+  if (!Number.isFinite(exp) || exp < Date.now()) return false;
+  const sigA = Buffer.from(parts[2]);
+  const sigB = Buffer.from(signSession(parts[0] + "." + parts[1]));
+  return sigA.length === sigB.length && crypto.timingSafeEqual(sigA, sigB);
 }
 
 /* CSRF defense: mutating requests with an Origin/Referer must match our host.
@@ -521,7 +523,7 @@ function isDenied(p) {
 
 /* ---------------- Router ---------------- */
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   try {
     applySecurityHeaders(req, res, { noStore: true });
     const ip = clientIp(req);
@@ -646,10 +648,12 @@ if (pathname === "/api/site-config" && req.method === "GET") {
       }
       serveStatic(res, filePath);
     });
-  } catch (err) {
+} catch (err) {
     serverError(res, err);
   }
-});
+}
+
+const server = http.createServer(handleRequest);
 
 /* ---------------- Env validation ---------------- */
 
@@ -671,7 +675,8 @@ function validateEnv() {
     console.error("\n  FATAL: Missing required environment variables:\n");
     missing.forEach(function (m) { console.error("    - " + m); });
     console.error("\n  Copy .env.example to .env and configure the required values.\n");
-    process.exit(1);
+    if (require.main === module) process.exit(1);
+    throw new Error("Missing required environment variables: " + missing.join("; "));
   }
   if (warnings.length) {
     console.log("\n  NOTE: Optional configuration missing:\n");
@@ -682,7 +687,11 @@ function validateEnv() {
 
 validateEnv();
 
-server.listen(PORT, "0.0.0.0", () => {
-  logger.log("info", "server_started", { port: PORT, engine: db.activeEngine(), mailer: mailer.activeTransport(), whatsapp: whatsapp.configured() ? "whatsapp_cloud_api" : "off" });
-  console.log("SYNELIGHT running at http://0.0.0.0:" + PORT);
-});
+if (require.main === module) {
+  server.listen(PORT, "0.0.0.0", () => {
+    logger.log("info", "server_started", { port: PORT, engine: db.activeEngine(), mailer: mailer.activeTransport(), whatsapp: whatsapp.configured() ? "whatsapp_cloud_api" : "off" });
+    console.log("SYNELIGHT running at http://0.0.0.0:" + PORT);
+  });
+}
+
+module.exports = { handleRequest, server };
