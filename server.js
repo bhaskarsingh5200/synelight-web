@@ -280,18 +280,19 @@ async function handleCreateLead(req, res, ip) {
     return json(res, 500, { success: false, message: "Unable to submit your request." });
   }
 
-  if (created.duplicate) {
+if (created.duplicate) {
     logger.log("info", "duplicate_suppressed", { id: created.lead.id });
   } else {
     logger.log("info", "lead_created", { id: created.lead.id, engine: db.activeEngine() });
-    /* Email must never block or fail the lead creation */
-    mailer.notifyInternalLead(created.lead).catch((e) =>
-      logger.error("email_failed", { tag: "internal", reason: String(e.message).slice(0, 120) }));
-mailer.confirmClientLead(created.lead).catch((e) =>
-      logger.error("email_failed", { tag: "confirmation", reason: String(e.message).slice(0, 120) }));
-    /* WhatsApp must never block or fail the lead creation either */
-    whatsapp.notifyInternalLead(created.lead).catch((e) =>
-      logger.error("whatsapp_failed", { reason: String(e.message).slice(0, 120) }));
+
+    /* Notifications are awaited (never fail the request) so they deterministically
+       fire on serverless — fire-and-forget async can be cut short when a lambda
+       freezes right after responding. */
+    await Promise.allSettled([
+      mailer.notifyInternalLead(created.lead),
+      mailer.confirmClientLead(created.lead),
+      whatsapp.notifyInternalLead(created.lead)
+    ]);
   }
 
   json(res, 201, { success: true });
