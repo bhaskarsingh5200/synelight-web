@@ -5,7 +5,7 @@
    Or:  SITE_URL=https://mysite.com node scripts/build-sitemap.js
 
    Staging detection:
-   - If SITE_URL contains "onrender.com" or is empty → staging mode (noindex)
+   - If SITE_URL is empty or a *.vercel.app / localhost URL → staging mode (noindex)
    - If SITE_URL is a real domain → production mode */
 "use strict";
 const fs = require("fs");
@@ -13,8 +13,8 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const rawUrl = (process.env.SITE_URL || "").replace(/\/+$/, "");
-const isStaging = !rawUrl || /onrender\.com$|localhost/i.test(rawUrl);
-const SITE_URL = rawUrl || "https://synelight-agency.onrender.com";
+const isStaging = !rawUrl || /onrender\.com|localhost/i.test(rawUrl);
+const SITE_URL = rawUrl || "https://synelight.com";
 
 const PAGES = [
   { loc: "/",                          changefreq: "monthly", priority: "1.0" },
@@ -66,7 +66,7 @@ const robotsLines = [
 ];
 
 if (isStaging) {
-  /* Staging: block all crawlers to prevent indexing the Render URL */
+  /* Staging: block all crawlers to prevent indexing temporary URLs */
   robotsLines.push(
     "",
     "# STAGING — prevent search engines from indexing this URL",
