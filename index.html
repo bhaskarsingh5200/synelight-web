@@ -28,7 +28,7 @@
   <meta name="twitter:title" content="SYNELIGHT — AI, Automation &amp; Digital Growth Agency">
   <meta name="twitter:description" content="SYNELIGHT builds websites, AI solutions, automation and digital growth systems that help businesses launch, automate and grow.">
   <meta name="twitter:image" content="https://synelight.com/assets/og-image.png">
-  <meta name="theme-color" content="#0E9FB2">
+  <meta name="theme-color" content="#060B18">
   <link rel="icon" href="assets/icons/favicon.ico" sizes="32x32">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
@@ -672,6 +672,22 @@
       </div>
     </section>
 
+    <!-- ================= LATEST BLOG ================= -->
+    <section class="section section--line" aria-labelledby="blog-home-title">
+      <div class="container">
+        <div class="section-head section-head--center reveal">
+          <p class="eyebrow eyebrow--center">From the Blog</p>
+          <h2 id="blog-home-title">Insights, guides and honest takes on AI and digital growth.</h2>
+        </div>
+        <div class="blog-home-grid reveal" id="home-blog-grid" aria-live="polite" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:28px;margin-top:48px;">
+          <p style="grid-column:1/-1;color:var(--text-3);">Loading latest posts...</p>
+        </div>
+        <div class="btn-row reveal" style="margin-top:44px;justify-content:center;">
+          <a class="btn btn--ghost" href="blog/">Browse All Articles <span class="arr" aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= FINAL CTA ================= -->
     <section class="section final-cta" aria-labelledby="cta-title">
       <div class="container">
@@ -702,7 +718,7 @@
             <a href="https://www.instagram.com/synelight.co/" target="_blank" rel="noopener" aria-label="SYNELIGHT on Instagram">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
             </a>
-            <a href="https://www.linkedin.com/in/bhaskar-bhardwaj-002a28386" target="_blank" rel="noopener" aria-label="SYNELIGHT on LinkedIn">
+            <a href="https://linkedin.com/" target="_blank" rel="noopener" aria-label="SYNELIGHT on LinkedIn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.4 8.1h4.2V23H.4V8.1zM8.2 8.1h4v2h.06c.56-1.06 1.93-2.2 3.97-2.2 4.25 0 5.03 2.8 5.03 6.44V23h-4.2v-7.6c0-1.8-.03-4.1-2.5-4.1-2.5 0-2.9 1.96-2.9 3.97V23H8.2V8.1z"/></svg>
             </a>
           </div>
@@ -750,5 +766,23 @@
   </footer>
 
   <script src="assets/js/main.js"></script>
+  <script>
+    (function(){
+      var grid=document.getElementById("home-blog-grid");
+      if(!grid)return;
+      fetch("/api/blog").then(function(r){return r.json()}).then(function(d){
+        var posts=(d.posts||[]).slice(0,3);
+        if(!posts.length){grid.innerHTML='<p style="grid-column:1/-1;color:var(--text-3);">No posts yet.</p>';return}
+        grid.innerHTML=posts.map(function(p){
+          return '<a href="/blog/'+p.slug+'/" class="card" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;">'
+            +'<span class="card-index">'+(p.category||"Insights").toUpperCase()+'</span>'
+            +'<h3 style="font-size:clamp(18px,1.3vw,22px);margin:0 0 10px;">'+p.title+'</h3>'
+            +'<p style="font-size:14px;line-height:1.65;flex:1;">'+p.excerpt+'</p>'
+            +'<span class="link-arrow" style="margin-top:auto;">Read more <span class="arr" aria-hidden="true">→</span></span>'
+            +'</a>'
+        }).join("")
+      }).catch(function(){grid.innerHTML=""})
+    })();
+  </script>
 </body>
 </html>

@@ -961,7 +961,7 @@ p { margin: 0; }
 .article-meta .cat { color: var(--cyan); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; font-size: 12px; }
 
 .article-cover { margin: 0 0 34px; }
-.article-cover img { border-radius: 16px; border: 1px solid rgba(13,27,62,.08); box-shadow: 0 18px 40px -22px rgba(13,27,62,.35); }
+.article-cover img { border-radius: 16px; border: 1px solid rgba(148,163,184,.2); box-shadow: 0 18px 40px -22px rgba(0,0,0,.6); }
 
 /* ---------- Insights cards ---------- */
 .insight-card { display: flex; flex-direction: column; }
